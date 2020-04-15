@@ -5,9 +5,33 @@ const formSearch = document.querySelector('.form-search'),
 			dropdownCitiesTo = document.querySelector('.dropdown__cities-to'),
 			inputDateDepart = document.querySelector('.input__date-depart');
 
+// data
+const citiesAPI ='cities.json',
+			proxy = 'https://cors-anywhere.herokuapp.com/',
+			TOKEN = '5a698271669a44e9d72c2cdb7c2db57b',
+			CALENDAR = 'http://min-prices.aviasales.ru/calendar_preload'; 
+// http://api.travelpayouts.com/data/ru/cities.json
+let city  = [];
 
-const city  = ['Chisinau','Moscow','Sofia', 'Buchurest', 'Odesa', 'Timisoara',
-								'Balti', 'Arad', 'Budapesta', 'Criuleni', 'Paris', 'Munchen'];
+
+const getData = (url, callback) => {
+	const request  = new XMLHttpRequest();
+
+	request.open('GET', url);
+
+	request.addEventListener('readystatechange', () =>{
+		if (request.readyState !== 4) return;
+ 
+		if (request.status === 200) {
+			callback(request.response);		
+		} else{
+			console.error(request.status)
+		}
+	});
+
+	request.send();
+};
+
 
 
 
@@ -17,17 +41,29 @@ const showCity = (input, list) => {
 	if (input.value !== '') {
 
 		const filterCity = city.filter((item) => {
-			const fixItem = item.toLowerCase();
+		// if (item.name_translations.en) {
+			const fixItem = item.name_translations.en.toLowerCase(); //or you can here put item.name for Russian city's name
 			return fixItem.includes(input.value.toLowerCase())
+			// }
 		})
 		filterCity.forEach((item) => {
 			const li = document.createElement('li');
 			li.classList.add('​dropdown__city');
-			li.textContent = item;
+			li.textContent = item.name_translations.en; //or you can here put item.name for Russian city's name
 			list.append(li)
 		})
 	}
 }
+
+const selectCity = (event, input, list) => {
+	const target = event.target
+
+	if (target.tagName.toLowerCase() === 'li') {
+		input.value = target.textContent;
+		list.textContent = ''
+	}
+}
+	// events
 
 inputCitiesFrom.addEventListener('input', () => {
 	showCity(inputCitiesFrom, dropdownCitiesFrom)
@@ -37,20 +73,16 @@ inputCitiesTo.addEventListener('input', () => {
 	showCity(inputCitiesTo, dropdownCitiesTo)
 })
 
-dropdownCitiesFrom.addEventListener('click', (e) => {
-	const target = e.target
-	
-	if (target.tagName.toLowerCase() === 'li') {
-		inputCitiesFrom.value = target.textContent;
-		dropdownCitiesFrom.textContent = ''
-	}
-})
+dropdownCitiesFrom.addEventListener('click', (event) => {
+	selectCity(event, inputCitiesFrom, dropdownCitiesFrom);
+});
 
-dropdownCitiesTo.addEventListener('click', (e) => {
-	const target = e.target
+dropdownCitiesTo.addEventListener('click', (event)=> {
+	selectCity(event, inputCitiesTo, dropdownCitiesTo);
+});
 
-	if (target.tagName.toLowerCase() === 'li') {
-		inputCitiesTo.value = target.textContent;
-		dropdownCitiesTo.textContent = ''
-	}
-})
+
+// functions calls
+getData(citiesAPI, (data) => {
+	city = JSON.parse(data).filter(item => item.name_translations.en);
+	});
